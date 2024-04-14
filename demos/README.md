@@ -1,4 +1,4 @@
 # DEMOS 
-##### in C++
+#### in C++
 
-###### This folder contains demos for all the data-structures/methods used in the project in C++
+###### This folder contains demos for all the methods, concepts and data structures used in the project in C++

@@ -1,10 +1,19 @@
-
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
 
-export default buildModule("Deployer", (m) => {
-  const sample = m.contract("SampleContract",["contract"]);
+const merkleModule = buildModule("MerkleTree", (m) => {
 
-  m.call(sample, "setStatus", []);
+  const merkleContract = m.contract("MerkleTree", []);
 
-  return { sample };
+  return { merkleContract };
+});
+
+export default buildModule("ElectionModule", (m) => {
+
+  const { merkleContract } = m.useModule(merkleModule);
+
+  const electionContract = m.contract("ElectionMain", [merkleContract]);
+
+  const hashContract = m.contract("HashContract", []);
+
+  return { electionContract, hashContract };
 });
