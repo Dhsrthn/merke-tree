@@ -1,25 +1,25 @@
 #include <bits/stdc++.h>
-#include <openssl/sha.h> // For SHA256 hash function
+#include <time.h>
 using namespace std;
 #define PADDING "______"
+#define N 20001
 
 class MerkleTree
 {
 private:
     vector<string> nodes;
-    vector<vector<string>> tree;
     string root;
     map<string, int> indexTable;
     int firstPadding = -1;
     string hashFunction(string s)
     {
         int hashValue = 0;
-        for (int i = 0; i < s.size(); i++)
-        {
-            hashValue += s[i];
-        }
-        hashValue = hashValue % 256;
-        return to_string(hashValue);
+        // for (int i = 0; i < s.size(); i++)
+        // {
+        //     hashValue += s[i];
+        // }
+        // hashValue = hashValue % 256;
+        // return to_string(hashValue);
         return s;
     }
     bool isPowerOfTwo(int n)
@@ -63,6 +63,7 @@ private:
         for (int i = 0; i < paddedNodes.size(); i++)
         {
             paddedNodes[i] = hashFunction(paddedNodes[i]);
+            nodes.push_back(paddedNodes[i]);
             indexTable[paddedNodes[i]] = tree[0].size() + i;
         }
         firstPadding = tree[0].size() + 1;
@@ -100,6 +101,7 @@ private:
     }
 
 public:
+    vector<vector<string>> tree;
     MerkleTree(vector<string> &data)
     {
         nodes = data;
@@ -164,14 +166,12 @@ public:
     vector<string> getPath(string item)
     {
         item = hashFunction(item);
-        cout << item << endl;
         auto it = indexTable.find(item);
         if (it == indexTable.end())
         {
             return {};
         }
         int index = it->second;
-        cout << index << endl;
         vector<string> path;
         int currentLevel = 0;
         int currentIndex = index;
@@ -225,14 +225,83 @@ public:
     }
 };
 
+void addElement(string array[], string data, int &p)
+{
+    array[p] = data;
+    p++;
+}
+
+bool lookForElement(string array[], string data, int size)
+{
+    for (int i = 0; i < size; i++)
+    {
+        if (array[i] == data)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 int main()
 {
-    vector<string> data = {"a", "b", "c", "d", "e", "f"};
-    MerkleTree mt(data);
-    mt.printTree();
-    mt.addElement("h");
-    mt.printTree();
-    vector<string> path = mt.getPath("h");
-    cout << mt.verifyElement("p", path) << endl;
+    // to compare time taken
+    clock_t start, end;
+    double cpu_time_used;
+
+    string array[N] = {""};
+    int p = 0;
+    vector<string> toAddElements(N);
+    for (int i = 0; i < N; ++i)
+    {
+        toAddElements[i] = to_string(i + 1);
+    }
+    start = clock();
+    MerkleTree merkle(toAddElements);
+    end = clock();
+    // merkle.printTree();
+    printf("Time taken by the function: %ld cycles\n", end - start);
+
+    start = clock();
+    for (int i = 0; i < toAddElements.size(); i++)
+    {
+        addElement(array, toAddElements[i], p);
+    }
+    end = clock();
+    printf("Time taken by the function: %ld cycles\n", end - start);
+
+    // index of element to verify
+    vector<int> toVerify = {11000, 12000, 13000, 14000, 15000, 1600, 17000, 18000, 19000, 20000};
+
+    vector<string> path;
+    for (int i = 0; i < toVerify.size(); i++)
+    {
+        path = merkle.getPath(toAddElements[toVerify[i]]);
+        start = clock();
+        merkle.verifyElement(toAddElements[toVerify[i]], path);
+        end = clock();
+        printf("Merkle Time taken by the function: %ld cycles\n", end - start);
+    }
+
+    for (int i = 0; i < toVerify.size(); i++)
+    {
+        start = clock();
+        lookForElement(array, toAddElements[toVerify[i]], p);
+        end = clock();
+        printf("ArrayTime taken by the function: %ld cycles\n", end - start);
+    }
+
+    int oneMerkleElement = sizeof(merkle.tree[0][0]);
+    int oneArrayElement = sizeof(array[0]);
+    cout << "Array storage" << oneArrayElement * N << endl;
+    int total = 0;
+    for (int i = 0; i < merkle.tree.size(); i++)
+    {
+        total += merkle.tree[i].size() * oneMerkleElement;
+    }
+    cout << "Merkle tree storage " << total << endl;
+
+    // element that is not there
+
     return 0;
 }
