@@ -6,13 +6,21 @@ contract MerkleTree {
     // padding data
     bytes32 private paddingString = "someOtherRandomStringForPadding";
 
+    struct nodeIndex {
+        uint index;
+        bool exist;
+    }
+    
+    // the tree
     struct merkle {
         int firstPadding;
         uint height;
         bytes32 root;
         bytes32[][] tree;
+        mapping(bytes32 => nodeIndex) nodeToIndex;
     }
 
+    // to allow multiple trees
     uint public treeCount = 0;
     mapping(uint => merkle) forest;
 
@@ -59,12 +67,16 @@ contract MerkleTree {
         }
     }
 
+    // initialise the tree, and get the tree ID
     function initTreeAndGetID() public returns (uint) {
         treeCount++;
         forest[treeCount].firstPadding = -1;
         return treeCount;
     }
 
+    // called incase there are no padding elements in the current tree
+    // makes a tree with same size as already existing tree , with one data
+    // element that is provided, and remaining all padding data
     function makePaddingTree(uint _treeID, bytes32 data) public {
         merkle storage currTree = forest[_treeID];
         // make padding tree
@@ -100,6 +112,9 @@ contract MerkleTree {
         mergeTreesAndUpdateRoot(_treeID, newTree);
     }
 
+    // to merge the padding tree with the already existing tree
+    // and update new root
+    // the height of the tree is increased by 1
     function mergeTreesAndUpdateRoot(
         uint _treeID,
         bytes32[][] memory newTree
@@ -118,6 +133,7 @@ contract MerkleTree {
         currTree.height += 1;
     }
 
+    // to add a element to the merkle tree
     function addElement(uint _treeID, bytes32 data) public {
         merkle storage currTree = forest[_treeID];
         data = sha256Hash(data);
@@ -139,6 +155,7 @@ contract MerkleTree {
                 // sets root
                 currTree.root = hashBytes32(currentLevel[0], currentLevel[1]);
             } else {
+                // the tree is full
                 makePaddingTree(_treeID, data);
             }
         } else {
@@ -178,6 +195,7 @@ contract MerkleTree {
         }
     }
 
+    // get a element's path
     function getElementPath(
         uint _treeID,
         bytes32 leaf
@@ -185,9 +203,9 @@ contract MerkleTree {
         merkle storage currTree = forest[_treeID];
         bytes32[] memory path = new bytes32[](currTree.height - 1);
         uint[] memory hashOrder = new uint[](currTree.height - 1);
-        leaf = sha256Hash(leaf);
         int indexD = -1;
         uint index = 0;
+        // to-do : implement a mapping from node data to index instead of linear search
         for (uint i = 0; i < currTree.tree[0].length; i++) {
             if (leaf == currTree.tree[0][i]) {
                 indexD = int(i);
@@ -228,5 +246,11 @@ contract MerkleTree {
             }
         }
         return hashString == forest[_treeID].root;
+    }
+
+    function getTree(
+        uint _treeID
+    ) public view returns (bytes32[][] memory tree) {
+        return forest[_treeID].tree;
     }
 }

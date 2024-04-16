@@ -3,7 +3,6 @@
 using namespace std;
 #define PADDING "______"
 
-
 class MerkleTree
 {
 private:
@@ -67,6 +66,10 @@ private:
             indexTable[paddedNodes[i]] = tree[0].size() + i;
         }
         firstPadding = tree[0].size() + 1;
+        if (firstPadding > 2 * tree[0].size())
+        {
+            firstPadding = -1;
+        }
 
         vector<vector<string>> newTree;
         vector<string> currentLevel;

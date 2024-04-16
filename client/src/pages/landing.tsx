@@ -1,21 +1,13 @@
-import { registerVoter } from "../blockchain/methods";
 
 const Landing = () => {
-    const name = "hello";
-    const secret = "123"
 
-    async function registerVoterHandler() {
-        const val = await registerVoter(name, secret);
-        if (val) {
-            console.log("Success!")
-        } else {
-            console.log("Failure");
-        }
-    }
+    return (
+        <div className="h-screen w-screen">
 
-    return (<>
-        <button onClick={registerVoterHandler}>CLICKME</button>
-    </>);
+            {/* some landing page shit  */}
+
+        </div>
+    );
 }
 
 export default Landing;

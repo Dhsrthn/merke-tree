@@ -1,47 +1,63 @@
-import Web3 from "web3";
+import { hashTwoByte32 } from "../blockchain/methods";
 
-export function detectProvider() {
-  let provider;
-  if (window.ethereum) {
-    provider = window.ethereum;
-  } else if (window.web3) {
-    provider = window.web3.currentProvider;
-  } else {
-    console.log("Non- ethereum browser detected.");
+export function generateSecret() {
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let secret = "";
+  const charLength = characters.length;
+
+  for (let i = 0; i < 32; i++) {
+    const randomIndex = Math.floor(Math.random() * charLength);
+    secret += characters[randomIndex];
   }
-  return provider;
+
+  return secret;
 }
-export async function getAccounts(callback) {
-  const currentProvider = detectProvider();
-  if (currentProvider) {
-    try {
-      await currentProvider.request({ method: "eth_requestAccounts" });
 
-      const web3 = new Web3(currentProvider);
-
-      currentProvider.on("accountsChanged", async function (accounts) {
-        if (accounts.length > 0) {
-          callback(accounts[0]);
-        } else {
-          console.error("No accounts found.");
-          callback(null);
-        }
-      });
-
-      const userAccounts = await web3.eth.getAccounts();
-
-      if (userAccounts.length > 0) {
-        callback(userAccounts[0]);
-      } else {
-        console.error("No accounts found.");
-        callback(null);
-      }
-    } catch (error) {
-      console.error("Error fetching accounts:", error);
-      callback(null);
+export function arraysToJson(path, hashDirection) {
+  const data = {
+    path: path.map(String),
+    hashDirection: hashDirection,
+  };
+  const replacer = (key, value) => {
+    if (typeof value === "bigint") {
+      return value.toString();
     }
-  } else {
-    console.error("No provider detected.");
-    callback(null);
+    return value;
+  };
+
+  return JSON.stringify(data, replacer);
+}
+
+export function JsontoArrays(jsonData) {
+  const data = JSON.parse(jsonData);
+  return {
+    path: data.path,
+    hashDirection: data.hashDirection,
+  };
+}
+
+
+export async function verifyProof(path, hashOrder, root, leaf) {
+  let hashedString = leaf;
+  for (let i = 0; i < path.length; i++) {
+    if (hashOrder[i] == 0) {
+      const res = await hashTwoByte32(path[i], hashedString);
+      if (res) {
+        hashedString = res;
+      } else {
+        console.log("An error occurred while hashing");
+        return false;
+      }
+    } else {
+      const res = await hashTwoByte32(hashedString, path[i]);
+      if (res) {
+        hashedString = res;
+      } else {
+        console.log("An error occurred while hashing");
+        return false;
+      }
+    }
   }
+  return root == hashedString;
 }

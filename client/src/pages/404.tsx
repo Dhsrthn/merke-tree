@@ -1,4 +1,3 @@
-
 const NotFound = () => {
     return (<div className="h-screen w-screen bg-black text-white flex flex-col justify-around items-center" >
         <div className="flex flex-col items-center h-[50%] w-[50%] justify-center">

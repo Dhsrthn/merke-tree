@@ -1,7 +1,7 @@
 import Web3 from "web3";
-import { getAccounts } from "../utils/utils.js";
+import { getAccount } from "../utils/blockchain.js";
 import deployedAddresses from "../../../ignition/deployments/chain-1337/deployed_addresses.json" assert { type: "json" };
-import contractAddresses from "../../../ignition/deployments/chain-1337/build-info/2b34fa845a75db25dea6f4495f61c3de.json" assert { type: "json" };
+import contractAddresses from "../../../ignition/deployments/chain-1337/build-info/4f18e3f741557028673149560321a7d2.json" assert { type: "json" };
 
 // Initialize the provider
 let web3;
@@ -19,7 +19,6 @@ if (window.ethereum) {
     "Non-Ethereum browser detected. You should consider trying MetaMask!"
   );
 }
-
 // Contract Instances
 const electionAbi =
   contractAddresses.output.contracts["contracts/ElectionMain.sol"].ElectionMain
@@ -42,12 +41,7 @@ const hashContract = new web3.eth.Contract(
 // To handle the account
 let account = null;
 
-function handleAccountChange(newAccount) {
-  account = newAccount;
-}
-
-account = getAccounts(handleAccountChange);
-
+account = await getAccount();
 // ALL BLOCKCHAIN METHODS
 
 // helper hash methods
@@ -62,16 +56,43 @@ export async function hashString(str) {
   }
 }
 
+export async function hashTwoStrings(str1, str2) {
+  try {
+    const hash = await hashContract.methods.hashString(str1, str2).call();
+    return hash;
+  } catch (error) {
+    console.error("Error hashing two strings:", error);
+    return null;
+  }
+}
+
+export async function hashByte32(byte) {
+  try {
+    const hash = await hashContract.methods.hashSingleByte(byte).call();
+    return hash;
+  } catch (error) {
+    console.error("Error hashing byte32:", error);
+    return null;
+  }
+}
+
+export async function hashTwoByte32(byte1, byte2) {
+  try {
+    const hash = await hashContract.methods.hashByte32(byte1, byte2).call();
+    return hash;
+  } catch (err) {
+    console.log("Error hashing the given byte32 values", err);
+    return null;
+  }
+}
+
 // election contract methods
 
-export async function registerVoter(name, secret) {
+export async function registerVoter(sec) {
   try {
-    const res = await electionContract.methods
-      .registerVoter(name, secret)
-      .send({
-        from: account,
-      });
-    console.log(res);
+    await electionContract.methods.registerVoter(sec).send({
+      from: account,
+    });
     return true;
   } catch (error) {
     console.error("Error registering voter:", error);
@@ -79,13 +100,51 @@ export async function registerVoter(name, secret) {
   }
 }
 
-export async function getVoterProof(secret) {
+export async function getVoterProof(commitment) {
   try {
-    const proof = await electionContract.methods.getVoterProof(secret).call();
+    const proof = await electionContract.methods
+      .getVoterProof(commitment)
+      .call();
+    // [path] , [hashDirection]
     return proof;
   } catch (error) {
     console.error("Error getting voter proof:", error);
     return null;
+  }
+}
+
+export async function getAllCandidates() {
+  try {
+    const candidates = await electionContract.methods.getAllCandidates().call();
+    // [address],[names]
+    return candidates;
+  } catch (error) {
+    console.error("Error getting all candidates", error);
+    return null;
+  }
+}
+
+export async function castVote(path, hashDirection, commitment, candidate) {
+  try {
+    await electionContract.methods
+      .castVote(path, hashDirection, commitment, candidate)
+      .call();
+    return true;
+  } catch (error) {
+    console.error("Error casting vote", error);
+    return false;
+  }
+}
+
+export async function verifyVoterProof(path, hashDirection, committment) {
+  try {
+    const res = await electionContract.methods
+      .verifyProof(path, hashDirection, committment)
+      .call();
+    return res;
+  } catch (error) {
+    console.error("Error verifying voter proof:", error);
+    return false;
   }
 }
 
@@ -95,6 +154,104 @@ export async function getMerkleRoot() {
     return root;
   } catch (error) {
     console.error("Error getting merkle root:", error);
+    return null;
+  }
+}
+
+export async function registerCandidate(name) {
+  try {
+    await electionContract.methods
+      .registerCandidate(name)
+      .send({ from: account });
+    return true;
+  } catch (error) {
+    console.error("Error registering candidate", error);
+    return false;
+  }
+}
+
+export async function tallyVotes() {
+  try {
+    const res = await electionContract.methods.tallyVotes().call();
+    return res;
+  } catch (err) {
+    console.error("Error tallying votes", err);
+    return null;
+  }
+}
+
+//admin methods
+
+export async function checkAdmin() {
+  try {
+    const res = await electionContract.methods
+      .checkIfAdmin()
+      .call({ from: account });
+    return res;
+  } catch (err) {
+    console.error("Error checking if admin", err);
+    return null;
+  }
+}
+
+export async function startTheElection() {
+  try {
+    await electionContract.methods.startElection().call({ from: account });
+  } catch (err) {
+    console.error("Error starting the election", err);
+    return null;
+  }
+}
+
+export async function endTheEletion() {
+  try {
+    await electionContract.methods.endElection().call({ from: account });
+  } catch (err) {
+    console.error("Error ending the election", err);
+    return null;
+  }
+}
+
+export async function tallyElectionVotes() {
+  try {
+    const res = await electionContract.methods.tallyVotes().call();
+    return res;
+  } catch (err) {
+    console.error("Error tallying votes", err);
+    return null;
+  }
+}
+
+export async function isAVoter() {
+  try {
+    const res = await electionContract.methods
+      .isRegisteredVoter(account)
+      .call();
+    return res;
+  } catch (err) {
+    console.error("Error checking if voter", err);
+    return false;
+  }
+}
+
+export async function isACandidate() {
+  try {
+    const res = await electionContract.methods
+      .isRegisteredCandidate(account)
+      .call();
+    return res;
+  } catch (err) {
+    console.error("Error checking if candidate", err);
+    return false;
+  }
+}
+
+export async function getMerkleTree() {
+  try {
+    const tree = electionContract.methods.getEntireTree().call();
+    return tree;
+  } catch (err) {
+    console.log("Error while getting the tree", err);
     return null;
   }
 }
