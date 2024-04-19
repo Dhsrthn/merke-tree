@@ -13,7 +13,7 @@ export default buildModule("ElectionModule", (m) => {
   console.log(process.argv)
   // in minutes (for testing)
   const duration = 2;
-  const startAfter = 1;
+  const startAfter = 100;
 
   const electionContract = m.contract("ElectionMain", [merkleContract, duration, startAfter]);
 

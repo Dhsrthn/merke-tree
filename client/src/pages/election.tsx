@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { registerVoter, hashTwoStrings, registerCandidate, getAllCandidates, verifyVoterProof, castVote, isAVoter, isACandidate, hashByte32 } from "../blockchain/methods";
+import { registerVoter, hashTwoStrings, registerCandidate, getAllCandidates, verifyVoterProof, castVote, isAVoter, isACandidate } from "../blockchain/methods";
 import { JsontoArrays, generateSecret } from "../utils/utils";
+import Header from "../components/header";
+import toast, { Toaster } from "react-hot-toast";
 
 const ElectionPage = () => {
 
@@ -9,10 +11,7 @@ const ElectionPage = () => {
 
     const [name, setName] = useState("");
     const [secret, setSecret] = useState("");
-    const [reveal, setReveal] = useState(false);
 
-    const [registered, setRegistered] = useState<boolean | null>();
-    const [candRegistered, setCandRegistered] = useState<boolean | null>();
 
     const [showVoterReg, setShowVoterReg] = useState(true);
 
@@ -31,16 +30,14 @@ const ElectionPage = () => {
     const handleVerifyProof = async () => {
         const res = await verifyVoterProof(path, hashDirection, commitment);
         if (res) {
-            //@ts-expect-error not found in types
             if (res[1] == true) {
-                alert("You have already casted your vote!");
+                toast("You have already casted your vote!");
             }
-            //@ts-expect-error not found in types
             if (res[0] && !res[1]) {
                 setVerified(true);
             }
         } else {
-            alert("Verification Failed!");
+            toast("Verification Failed!");
 
         }
     }
@@ -55,12 +52,10 @@ const ElectionPage = () => {
         }
         const res = await registerVoter(idenSec);
         if (res) {
-            setRegistered(true);
-            setCandRegistered(null);
             downloadSecret();
+            toast("Voter Registration Success!")
         } else {
-            setRegistered(false);
-            setCandRegistered(null);
+            toast("Voter Registration Failed!")
         }
 
     }
@@ -80,12 +75,10 @@ const ElectionPage = () => {
     const handleRegisterCandidate = async () => {
         const res = await registerCandidate(name);
         if (res) {
-            setCandRegistered(true);
-            setRegistered(null);
             setIsCandidate(true);
+            toast("Candidate Registration Success!")
         } else {
-            setCandRegistered(false);
-            setRegistered(null);
+            toast("Candidate Registration Failed!")
         }
 
     }
@@ -93,14 +86,11 @@ const ElectionPage = () => {
     const handleGetCandidates = async () => {
         const res = await getAllCandidates();
         if (res) {
-            //@ts-expect-error not found in types
+            console.log(res);
             if (res[1] != null && Array.isArray(res[1])) {
-                //@ts-expect-error not found in types
                 setCandidateNames(res[1]);
             }
-            //@ts-expect-error not found in types
             if (res[0] != null && Array.isArray(res[0])) {
-                //@ts-expect-error not found in types
                 setCandidateAddress(res[0]);
             }
         }
@@ -128,11 +118,11 @@ const ElectionPage = () => {
     const handleCastVote = async () => {
         const res = await castVote(path, hashDirection, commitment, selectedCand);
         if (res) {
-            alert("Vote casted successfully!");
+            toast("Vote casted successfully!");
             setVerificationScreen(false);
             setVerified(false);
         } else {
-            alert("Couldn't cast vote!");
+            toast("Couldn't cast vote!");
         }
 
     }
@@ -163,121 +153,111 @@ const ElectionPage = () => {
 
     useEffect(() => {
         if (secret != "") {
-            setReveal(true);
             setShowVoterReg(true);
         }
     }, [secret])
 
-    return (<div>
-        Election Main Page
-        <div className="border">
-            {
-                (!voter || !isCandidate) && <>
-                    <span>Enter your name</span>
-                    <div>
-                        <input type="text" className="border" value={name} onChange={(e) => {
-                            setName(e.target.value);
-                        }} />
-                    </div>
-                    {
-                        !voter && showVoterReg && <>
-                            <div className="flex flex-col">
-                                <span>VOTER REGISTRATION</span>
-                                <button onClick={handleRegisterVoter} disabled={voter}>Register Voter</button>
-                                {reveal && registered &&
-                                    <>
-                                        <span>This is your identity secret</span>
-                                        <span>Store this safe somewhere!</span>
-                                        <span>{secret}</span>
-                                    </>}
-                                {registered != null && registered &&
-                                    <span>Registration Successful!</span>
-                                }
-                                {registered != null && !registered &&
-                                    <>
-                                        <span>Registration Failed!</span>
-                                        <span>Note: You cannot register twice or after the election has started!</span>
-                                    </>
-                                }
-                                {/* Register Voter */}
-                            </div>
-                            {
-                                !isCandidate && <button onClick={() => {
-                                    setShowVoterReg(false);
-                                }}>
-                                    {">"}
-                                </button>
-                            }
+    return (<div className="font-clashDisplay font-bold  h-screen w-screen flex flex-col justify-evenly items-center bg-black text-white relative">
+        <Toaster />
+        <div className="h-[10%] w-full items-center justify-center flex p-1">
+            <Header />
 
-
-                        </>
-                    }
-                    {
-                        !isCandidate && !showVoterReg && <>
-                            <div className="flex flex-col">
-                                {/* Register Candidate */}
-                                <span>CANDIDATE REGISTRATION</span>
-                                <button onClick={handleRegisterCandidate}>Register Candidate</button>
-                                {candRegistered != null && candRegistered &&
-                                    <span>Registration as candidate Successful!</span>
-                                }
-                                {candRegistered != null && !candRegistered &&
-                                    <span>Registration as candidate Failed!</span>
-                                }
-                            </div>
-                            {
-                                !voter && <button onClick={() => {
-                                    setShowVoterReg(true);
-                                }}>
-                                    {"<"}
-                                </button>
-                            }
-
-                        </>
-                    }
-
-                </>
-            }
         </div>
+        <div className="h-[90%] w-full flex flex-col justify-evenly items-center">
 
-        <div className="flex">
-            <div>
-                <span>Candidates</span>
-                {candidateNames.map((name, index) => {
-                    return (<div key={index} className="flex flex-col">
-                        <span>{name}</span>
-                        <button onClick={() => {
-                            setVerificationScreen(true);
-                            setSelectedCand(candidateAddress[index]);
-                        }}>Vote</button>
-                    </div>);
+            <span className="text-2xl font-light bg-clip-text text-transparent bg-gradient-to-r from-[#ffe3b7]/[0.47] to-[#ffe3b7] select-none">
+                REGISTRATION
+            </span>
+            <div className="w-[60%] flex flex-col items-center h-[25%] justify-around">
+                {
+                    (!voter || !isCandidate) && <>
+                        <span className="font-light text-xl">Enter your name</span>
+                        <div className="w-[50%]">
+                            <input type="text" className="text-xl font-clashDisplay font-normal bg-clip-text text-transparent bg-gradient-to-r from-[#ffe3b7]/[0.47] to-[#ffe3b7] border-b-2 focus:border-[#ffc05b] focus:outline-none caret-slate-100 w-full" value={name} onChange={(e) => {
+                                setName(e.target.value);
+                            }} />
+                        </div>
+                        {
+                            !voter && showVoterReg && <>
+                                <div className="flex flex-col w-full items-center h-[40%] justify-around ">
+                                    <div className="flex w-[50%] justify-around ">
 
-                })}
+                                        <button onClick={handleRegisterVoter} disabled={voter} className="h-8 w-[80%] rounded-3xl border-2 border-[#C19E66] hover:bg-[#c19e66] hover:text-black portrait:w-[75%] portrait:h-14 fade-in-text z-20">Register As Voter</button>
+                                        {
+                                            !isCandidate && <button onClick={() => {
+                                                setShowVoterReg(false);
+                                            }}>
+                                                {">"}
+                                            </button>
+                                        }
+                                    </div>
+                                </div>
+                            </>
+                        }
+                        {
+                            !isCandidate && !showVoterReg && <>
+                                <div className="flex flex-col w-full items-center h-[40%] justify-around ">
+                                    <div className="flex w-[50%] justify-around ">
+                                        {
+                                            !voter && <button onClick={() => {
+                                                setShowVoterReg(true);
+                                            }}>
+                                                {"<"}
+                                            </button>
+                                        }
+                                        <button onClick={handleRegisterCandidate} className="h-8 w-[80%] rounded-3xl border-2 border-[#C19E66] hover:bg-[#c19e66] hover:text-black portrait:w-[75%] portrait:h-14 fade-in-text z-20">Register Candidate</button>
+                                        {/* Register Candidate */}</div>
+                                </div>
+
+
+                            </>
+                        }
+
+                    </>
+                }
             </div>
-            {
-                verificationScreen && <>
-                    <div className="flex flex-col ml-10">
-                        <span>Verification Screen</span>
-                        <span>Enter your Proof</span>
-                        <span>You can get your voter proof from the get proof page</span>
-                        <input type="text" className="border" onChange={(e) => {
-                            setCommitement(e.target.value);
-                        }} />
-                        <input type="file" onChange={handleFileUpload} />
-                        <button onClick={handleVerifyProof} className="border">Verify</button>
-                    </div>
 
-                </>
-            }
-            {
-                verified && selectedCand != "" &&
-                <>
-                    <span>Confirmation</span>
-                    <span>Are you sure you want to vote for {selectedCand}</span>
-                    <button onClick={handleCastVote}>Proceed and vote</button>
-                </>
-            }
+            <div className="flex border w-full h-[50%] overflow-y-auto  justify-around items-center">
+                <div className="border h-full w-[50%] text-center flex flex-col justify-around transition-all">
+                <span className="text-4xl font-light bg-clip-text text-transparent bg-gradient-to-r from-[#ffe3b7]/[0.47] to-[#ffe3b7] select-none">
+                CANDIDATES
+            </span>
+                    {candidateNames.map((name, index) => {
+                        return (<div key={index} className="flex flex-col">
+                            <span>{name}</span>
+                            <button onClick={() => {
+                                setVerificationScreen(true);
+                                setSelectedCand(candidateAddress[index]);
+                            }}>Vote</button>
+                        </div>);
 
+                    })}
+                </div>
+                {
+                    verificationScreen && <>
+                        <div className="flex flex-col ml-10">
+                            <span>Verification Screen</span>
+                            <span>Enter your Proof</span>
+                            <span>You can get your voter proof from the get proof page</span>
+                            <input type="text" className="border" onChange={(e) => {
+                                setCommitement(e.target.value);
+                            }} />
+                            <input type="file" onChange={handleFileUpload} />
+                            <button onClick={handleVerifyProof} className="border">Verify</button>
+                        </div>
+
+                    </>
+                }
+                {
+                    verified && selectedCand != "" &&
+                    <>
+                        <span>Confirmation</span>
+                        <span>Are you sure you want to vote for {selectedCand}</span>
+                        <button onClick={handleCastVote}>Proceed and vote</button>
+                    </>
+                }
+
+            </div>
         </div>
     </div>);
 }
