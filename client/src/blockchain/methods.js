@@ -1,7 +1,7 @@
 import Web3 from "web3";
 import { getAccount } from "../utils/blockchain.js";
 import deployedAddresses from "../../../ignition/deployments/chain-1337/deployed_addresses.json" assert { type: "json" };
-import contractAddresses from "../../../ignition/deployments/chain-1337/build-info/4f18e3f741557028673149560321a7d2.json" assert { type: "json" };
+import contractAddresses from "../../../ignition/deployments/chain-1337/build-info/cbdf2ce79f3f09c3550c74d4f4daebc4.json" assert { type: "json" };
 
 // Initialize the provider
 let web3;
@@ -128,7 +128,7 @@ export async function castVote(path, hashDirection, commitment, candidate) {
   try {
     await electionContract.methods
       .castVote(path, hashDirection, commitment, candidate)
-      .call();
+      .send({from:account});
     return true;
   } catch (error) {
     console.error("Error casting vote", error);
@@ -196,7 +196,10 @@ export async function checkAdmin() {
 
 export async function startTheElection() {
   try {
-    await electionContract.methods.startElection().call({ from: account });
+    const res = await electionContract.methods
+      .startElection(1)
+      .send({ from: account });
+    console.log("Election started", res);
   } catch (err) {
     console.error("Error starting the election", err);
     return null;
@@ -205,9 +208,22 @@ export async function startTheElection() {
 
 export async function endTheEletion() {
   try {
-    await electionContract.methods.endElection().call({ from: account });
+    const res = await electionContract.methods
+      .endElection(2)
+      .send({ from: account });
+    console.log("Election ended", res);
   } catch (err) {
     console.error("Error ending the election", err);
+    return null;
+  }
+}
+
+export async function electionStatus() {
+  try {
+    const res = await electionContract.methods.getElectionStatus().call();
+    return res;
+  } catch (err) {
+    console.error("Error getting election status", err);
     return null;
   }
 }

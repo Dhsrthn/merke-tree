@@ -17,7 +17,9 @@ const Landing = () => {
                     <span className="text-8xl portrait:text-4xl">
                         Vote anonymously
                     </span>
-                    <div className="flex w-[60%] justify-around items-center mb-12 text-4xl font-archivo font-semibold portrait:text-lg min-h-20 ">
+                    <div className="flex flex-col w-[60%] justify-around items-center mb-12 text-4xl font-archivo font-light portrait:text-lg min-h-20 ">
+                        <span>Your voice matters.</span>
+                        <span>Do not be afraid of anyone to use it!</span>
                     </div>
                 </div>
             </div>

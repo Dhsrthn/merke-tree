@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 contract MerkleTree {
     // padding data
     bytes32 private paddingString = "someOtherRandomStringForPadding";
-
+    
     struct nodeIndex {
         uint index;
         bool exist;
@@ -163,7 +163,6 @@ contract MerkleTree {
             uint fp = uint(currTree.firstPadding);
 
             currTree.tree[0][fp] = data;
-
             uint currLevel = 0;
             uint parentLevel = 1;
             uint currentIndex = fp;

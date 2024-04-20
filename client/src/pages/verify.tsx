@@ -7,8 +7,6 @@ import toast, { Toaster } from "react-hot-toast";
 const MerkleVerifier = () => {
   const [commitment, setCommitement] = useState<string>("");
 
-  const [verified, setVerified] = useState<boolean | null>(null);
-  const [alreadyVoted, setAlreadyVoted] = useState<boolean>(false);
 
   const [proof, setProof] = useState<string[]>([]);
   const [hashDirection, setHashDirection] = useState<number[]>([]);
@@ -21,31 +19,37 @@ const MerkleVerifier = () => {
   const handleGetProof = async () => {
     const res = await getVoterProof(commitment);
     if (res) {
-      //@ts-expect-error not found in types
       if (Array.isArray(res["0"]) && Array.isArray(res["1"])) {
-        //@ts-expect-error not found in types
         setProof(res["0"]);
-        //@ts-expect-error not found in types
         setHashDirection(res["1"]);
+        toast("Proof generated successfully!");
       }
     }
   };
 
   const handleVerifyProof = async () => {
+    console.log("called");
+    if (commitment === "") {
+      toast.error("Please enter a commitment");
+      return;
+    }
     const res = await verifyVoterProof(
       pathUploaded,
       hashDirectionUploaded,
       commitment
     );
+    console.log(res);
     if (res) {
-      //@ts-expect-error not found in types
-      if (res[0]) setVerified(true);
-      //@ts-expect-error not found in types
-      if (res[1]) {
-        setAlreadyVoted(true);
+      if (res[0]) {
+        toast("The given proof is true!");
+        if (res[1]) {
+          toast.error("This voter has already voted!");
+        }
+      } else {
+        toast("The given proof is false!");
       }
     } else {
-      setVerified(false);
+      toast("The given proof is false!");
     }
   };
 
@@ -69,6 +73,11 @@ const MerkleVerifier = () => {
   };
 
   const handleFileDownload = async () => {
+    if (proof.length === 0 || hashDirection.length === 0) {
+      toast.error("No proof found!");
+      toast("Get proof first!")
+      return;
+    }
     console.log(proof, hashDirection);
     const json = arraysToJson(proof, hashDirection);
     const blob = new Blob([json], { type: "applications/json" });
@@ -103,13 +112,19 @@ const MerkleVerifier = () => {
         />
         <button
           className="ring-offset-background focus-visible:ring-ring flex h-10 w-[80%] items-center justify-center whitespace-nowrap rounded-md bg-white px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-          onClick={handleGetProof}
+          onClick={(e) => {
+            e.preventDefault();
+            handleGetProof();
+          }}
         >
           Get Proof
         </button>
         <button
           className="ring-offset-background focus-visible:ring-ring flex h-10 w-[80%] items-center justify-center whitespace-nowrap rounded-md bg-white px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-          onClick={handleFileDownload}
+          onClick={(e) => {
+            e.preventDefault();
+            handleFileDownload();
+          }}
         >
           Download Proof
         </button>
@@ -120,23 +135,14 @@ const MerkleVerifier = () => {
         <input type="file" onChange={handleFileUpload} />
         <button
           className="ring-offset-background focus-visible:ring-ring flex h-10 w-[80%] items-center justify-center whitespace-nowrap rounded-md bg-white px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
-          onClick={handleVerifyProof}
+          onClick={(e) => {
+            e.preventDefault();
+            handleVerifyProof();
+          }}
         >
           Verify Proof
         </button>
       </div>
-      {verified != null && (
-        <>
-          {verified ? (
-            <>
-              The given proof is true
-              {alreadyVoted && "This voter has already voted!"}
-            </>
-          ) : (
-            <>The given proof is false</>
-          )}
-        </>
-      )}
     </div>
   );
 };

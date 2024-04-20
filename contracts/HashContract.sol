@@ -10,7 +10,6 @@ contract HashContract {
         bytes memory concatenated = abi.encodePacked(str1, str2);
         return sha256(concatenated);
     }
-
     // hash two byte32
     function hashByte32(
         bytes32 left,

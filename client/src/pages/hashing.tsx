@@ -1,7 +1,7 @@
 import { hashByte32 } from "../blockchain/methods";
 import { useEffect, useState } from "react";
 import Header from "../components/header";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster } from "react-hot-toast";
 
 const Hashing = () => {
   const [secret, setSecret] = useState<string>("");
@@ -11,13 +11,13 @@ const Hashing = () => {
   const getCommitment = async () => {
     const res = await hashByte32(secret);
     if (res) {
-      //@ts-expect-error type not found
       setCommitement(res);
     }
   };
-
   useEffect(() => {
-    setReveal(true);
+    if (commitment != "") {
+      setReveal(true);
+    }
   }, [commitment]);
 
   return (
@@ -49,10 +49,16 @@ const Hashing = () => {
         >
           Get Commitment
         </button>
-        <div>
-          <span>Your Identity commitment is:</span>
-          {reveal && <span> Hello : {` HI ${commitment}`}</span>}
-        </div>
+        {
+          reveal &&
+          <>
+
+            <div>
+              <span>Your Identity commitment is:</span>
+              <span>  {`${commitment}`}</span>
+            </div>
+          </>
+        }
       </div>
     </div>
   );
