@@ -17,28 +17,40 @@
 >yarn install
 >```
 
-3. Run your own local blockchain network using:
+3. Install Ganache globally to run a local blockchain network using:
 >```bash
->yarn hardhat node
+>npm i ganache --global
 >```
 
-4. Add the first few accounts shown in your screen to your metamask extension for tesing with different accounts. 
+4. Run your own local blockchain network using:
+>```bash
+>ganache 
+>```
+
+5. Deploy the smart contracts using
+>```bash
+>yarn deploy
+>```
+
+6. Add the local blockchain network to the metamask extension to test it.
+
+7. Add the first few accounts shown in your screen to your metamask extension for tesing with different accounts. 
 
 *Now your local blockchain network is up and running in port 8545 (or any other specified port)*
 
 ##### Front-end
 
-5. Navigate to the client directory using:
+8. Navigate to the client directory using:
 >```bash
 >cd client
 >```
 
-6. Install the required dependencies using: 
+9. Install the required dependencies using: 
 >```bash
 >yarn install
 >```
 
-7. Run the frontend application using:
+10. Run the frontend application using:
 >```
 >yarn dev
 >```
