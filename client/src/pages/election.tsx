@@ -1,25 +1,35 @@
 import { useEffect, useState } from "react";
-import { registerVoter, hashTwoStrings, registerCandidate, getAllCandidates, verifyVoterProof, castVote, isAVoter, isACandidate, hashByte32 } from "../blockchain/methods";
+import {
+    registerVoter,
+    hashTwoStrings,
+    registerCandidate,
+    getAllCandidates,
+    verifyVoterProof,
+    castVote,
+    isAVoter,
+    isACandidate,
+    electionStatus,
+} from "../blockchain/methods";
 import { JsontoArrays, generateSecret } from "../utils/utils";
+import Header from "../components/header";
+import toast, { Toaster } from "react-hot-toast";
 
 const ElectionPage = () => {
+
+    const [elecStatus, setELecStatus] = useState(0);
 
     const [voter, setVoter] = useState(false);
     const [isCandidate, setIsCandidate] = useState(false);
 
     const [name, setName] = useState("");
-    const [secret, setSecret] = useState("");
-    const [reveal, setReveal] = useState(false);
-
-    const [registered, setRegistered] = useState<boolean | null>();
-    const [candRegistered, setCandRegistered] = useState<boolean | null>();
 
     const [showVoterReg, setShowVoterReg] = useState(true);
 
-    const [candidateNames, setCandidateNames] = useState<string[]>([]);
+    const [candidateNames, setCandidateNames] = useState<string[]>([
+    ]);
     const [candidateAddress, setCandidateAddress] = useState<string[]>([]);
-    const [selectedCand, setSelectedCand] = useState<string>("");
-    const [commitment, setCommitement] = useState<string>('');
+    const [selectedCand, setSelectedCand] = useState<string>("Kavin");
+    const [commitment, setCommitement] = useState<string>("");
 
     const [path, setPath] = useState<string[]>([]);
     const [hashDirection, setHashDirection] = useState<number[]>([]);
@@ -31,80 +41,87 @@ const ElectionPage = () => {
     const handleVerifyProof = async () => {
         const res = await verifyVoterProof(path, hashDirection, commitment);
         if (res) {
-            //@ts-expect-error not found in types
             if (res[1] == true) {
-                alert("You have already casted your vote!");
+                toast("You have already casted your vote!");
             }
-            //@ts-expect-error not found in types
             if (res[0] && !res[1]) {
                 setVerified(true);
             }
         } else {
-            alert("Verification Failed!");
-
+            toast("Verification Failed!");
         }
-    }
+    };
 
     const handleRegisterVoter = async () => {
+        if (elecStatus == 2) {
+            toast.error("Election has ended!");
+            return;
+        }
+        if (elecStatus == 1) {
+            toast.error("Election has already started!");
+            return;
+        }
         const sec = generateSecret();
-        const idenSec = await hashTwoStrings(name, sec)
+        const idenSec = await hashTwoStrings(name, sec);
         if (idenSec == void 0 || Array.isArray(idenSec) || idenSec == null) {
-            console.log("Error in hashing");
-        } else {
-            setSecret(idenSec as string);
+            toast.error("Error in hashing");
         }
         const res = await registerVoter(idenSec);
         if (res) {
-            setRegistered(true);
-            setCandRegistered(null);
-            downloadSecret();
+            downloadSecret(idenSec);
+            toast.success("Voter Registration Success!");
         } else {
-            setRegistered(false);
-            setCandRegistered(null);
+            toast.error("Voter Registration Failed!");
         }
+    };
 
-    }
-
-    const downloadSecret = async () => {
-        const json = JSON.stringify({ secret: secret, message: "This is your identity secret. Store it safe! Do not share it with anyone" });
-        const blob = new Blob([json], { type: 'applications/json' });
+    const downloadSecret = async (secret: string) => {
+        const json = JSON.stringify({
+            secret: secret,
+            message:
+                "This is your identity secret. Store it safe! Do not share it with anyone",
+        });
+        const blob = new Blob([json], { type: "applications/json" });
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
-        a.download = 'secret.json';
+        a.download = "secret.json";
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
-    }
+    };
 
     const handleRegisterCandidate = async () => {
+        if (elecStatus == 2) {
+            toast.error("Election has ended!");
+            return;
+        }
+        if (elecStatus == 1) {
+            toast.error("Election has already started!");
+            return;
+        }
         const res = await registerCandidate(name);
         if (res) {
-            setCandRegistered(true);
-            setRegistered(null);
             setIsCandidate(true);
+            toast("Candidate Registration Success!");
+            await handleGetCandidates();
         } else {
-            setCandRegistered(false);
-            setRegistered(null);
+            toast("Candidate Registration Failed!");
         }
-
-    }
+    };
 
     const handleGetCandidates = async () => {
         const res = await getAllCandidates();
         if (res) {
-            //@ts-expect-error not found in types
+            console.log(res);
             if (res[1] != null && Array.isArray(res[1])) {
-                //@ts-expect-error not found in types
                 setCandidateNames(res[1]);
             }
-            //@ts-expect-error not found in types
             if (res[0] != null && Array.isArray(res[0])) {
-                //@ts-expect-error not found in types
                 setCandidateAddress(res[0]);
             }
         }
-    }
+    };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const input = e.target;
@@ -120,22 +137,31 @@ const ElectionPage = () => {
                 if (hashDirection && Array.isArray(hashDirection)) {
                     setHashDirection(hashDirection);
                 }
-            }
+            };
             reader.readAsText(file);
         }
-    }
+    };
 
     const handleCastVote = async () => {
+        if (elecStatus == 0) {
+            toast.error("Election has not started yet!");
+            return;
+        }
+        if (elecStatus == 2) {
+            toast.error("Election has ended!");
+            return;
+        }
         const res = await castVote(path, hashDirection, commitment, selectedCand);
+        console.log(res);
         if (res) {
-            alert("Vote casted successfully!");
+            toast("Vote casted successfully!");
             setVerificationScreen(false);
             setVerified(false);
         } else {
-            alert("Couldn't cast vote!");
+            toast.error("Couldn't cast vote!");
+            toast("You can only vote after the election starts!");
         }
-
-    }
+    };
     const checkIfVoter = async () => {
         const res = await isAVoter();
         if (res) {
@@ -144,7 +170,7 @@ const ElectionPage = () => {
         } else {
             setVoter(false);
         }
-    }
+    };
 
     const checkIfCandidate = async () => {
         const res = await isACandidate();
@@ -153,133 +179,258 @@ const ElectionPage = () => {
         } else {
             setIsCandidate(false);
         }
+    };
+
+    const handleGetElectionStatus = async () => {
+        const st = await electionStatus();
+        if (st) {
+            setELecStatus(st);
+        }
     }
 
     useEffect(() => {
         handleGetCandidates();
         checkIfCandidate();
         checkIfVoter();
-    }, [])
-
-    useEffect(() => {
-        if (secret != "") {
-            setReveal(true);
-            setShowVoterReg(true);
-        }
-    }, [secret])
-
-    return (<div>
-        Election Main Page
-        <div className="border">
-            {
-                (!voter || !isCandidate) && <>
-                    <span>Enter your name</span>
-                    <div>
-                        <input type="text" className="border" value={name} onChange={(e) => {
-                            setName(e.target.value);
-                        }} />
-                    </div>
-                    {
-                        !voter && showVoterReg && <>
-                            <div className="flex flex-col">
-                                <span>VOTER REGISTRATION</span>
-                                <button onClick={handleRegisterVoter} disabled={voter}>Register Voter</button>
-                                {reveal && registered &&
-                                    <>
-                                        <span>This is your identity secret</span>
-                                        <span>Store this safe somewhere!</span>
-                                        <span>{secret}</span>
-                                    </>}
-                                {registered != null && registered &&
-                                    <span>Registration Successful!</span>
-                                }
-                                {registered != null && !registered &&
-                                    <>
-                                        <span>Registration Failed!</span>
-                                        <span>Note: You cannot register twice or after the election has started!</span>
-                                    </>
-                                }
-                                {/* Register Voter */}
-                            </div>
-                            {
-                                !isCandidate && <button onClick={() => {
-                                    setShowVoterReg(false);
-                                }}>
-                                    {">"}
-                                </button>
-                            }
-
-
-                        </>
-                    }
-                    {
-                        !isCandidate && !showVoterReg && <>
-                            <div className="flex flex-col">
-                                {/* Register Candidate */}
-                                <span>CANDIDATE REGISTRATION</span>
-                                <button onClick={handleRegisterCandidate}>Register Candidate</button>
-                                {candRegistered != null && candRegistered &&
-                                    <span>Registration as candidate Successful!</span>
-                                }
-                                {candRegistered != null && !candRegistered &&
-                                    <span>Registration as candidate Failed!</span>
-                                }
-                            </div>
-                            {
-                                !voter && <button onClick={() => {
-                                    setShowVoterReg(true);
-                                }}>
-                                    {"<"}
-                                </button>
-                            }
-
-                        </>
-                    }
-
-                </>
+        handleGetElectionStatus();
+        window.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                setVerificationScreen(false);
+                setVerified(false);
             }
-        </div>
+        }
+        );
+        return () => {
+            window.removeEventListener("keydown", (e) => {
+                if (e.key === "Escape") {
+                    setVerificationScreen(false);
+                    setVerified(false);
+                }
+            });
+        }
+    }, []);
 
-        <div className="flex">
-            <div>
-                <span>Candidates</span>
-                {candidateNames.map((name, index) => {
-                    return (<div key={index} className="flex flex-col">
-                        <span>{name}</span>
-                        <button onClick={() => {
-                            setVerificationScreen(true);
-                            setSelectedCand(candidateAddress[index]);
-                        }}>Vote</button>
-                    </div>);
 
-                })}
+    return (
+        <div className="font-clashDisplay font-bold  h-screen w-screen flex flex-col justify-evenly items-center bg-black text-white">
+            <Toaster />
+            <div className="h-[10%] w-full items-center justify-center flex p-1 absolute top-0">
+                <Header />
+            </div>
+            <div className={`bg-white text-black font-sans absolute right-[7vw] top-[50%] -translate-y-1/2 ${(voter && isCandidate && "hidden")}`}>
+                <div className="flex py-[100px] px-[30px] flex-col items-center justify-center">
+                    <div className="max-h-auto mx-auto max-w-xl">
+                        {(!voter || !isCandidate) && (
+                            <>
+                                <div className="mb-8 space-y-3">
+                                    {!voter && showVoterReg && (
+                                        <>
+                                            <p className="text-xl font-semibold text-black">
+                                                Voter Registration
+                                            </p>
+                                            <p className="text-gray-500">
+                                                Ready to vote? Let's get you registered! It's that easy.{" "}
+                                                <br />
+                                                Your voice matters!!
+                                            </p>
+                                        </>
+                                    )}
+                                    {!isCandidate && !showVoterReg && (
+                                        <>
+                                            <p className="text-xl font-semibold">
+                                                Candidate Registration
+                                            </p>
+                                            <p className="text-gray-500">
+                                                Ready to lead? Cool. Register as a candidate now!
+                                                <br />
+                                                Make your mark.
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
+                                <form className="w-full">
+                                    <div className="mb-10 space-y-3">
+                                        <div className="space-y-1">
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                                    Name
+                                                </label>
+                                                <input
+                                                    className="border-input 
+                                  bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                                    id="name"
+                                                    value={name}
+                                                    onChange={(e) => {
+                                                        setName(e.target.value);
+                                                    }}
+                                                    placeholder="Your Name"
+                                                />
+                                            </div>
+                                        </div>
+                                        {!voter && showVoterReg && (
+                                            <>
+                                                <button
+                                                    className="ring-offset-background focus-visible:ring-ring flex h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handleRegisterVoter();
+                                                    }}
+                                                    disabled={voter}
+                                                >
+                                                    Register As voter
+                                                </button>
+                                            </>
+                                        )}
+                                        {!isCandidate && !showVoterReg && (
+                                            <>
+                                                <button
+                                                    className="ring-offset-background focus-visible:ring-ring flex h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-black px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-black/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        handleRegisterCandidate();
+                                                    }}
+                                                >
+                                                    Register As Candiate
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
+                                </form>
+
+                                {!isCandidate && showVoterReg && (
+                                    <>
+                                        <div className="text-center text-black">
+                                            {" "}
+                                            Want to Participate in Election ?{" "}
+                                            <button
+                                                className="text-blue-500"
+                                                onClick={() => {
+                                                    setShowVoterReg(false);
+                                                }}
+                                            >
+                                                Register
+                                            </button>{" "}
+                                        </div>
+                                    </>
+                                )}
+                                {!voter && !showVoterReg && (
+                                    <>
+                                        <div className="text-center">
+                                            {" "}
+                                            Wanna be a Voter?{" "}
+                                            <button
+                                                className="text-blue-500"
+                                                onClick={() => {
+                                                    setShowVoterReg(true);
+                                                }}
+                                            >
+                                                Register
+                                            </button>{" "}
+                                        </div>
+                                    </>
+                                )}
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+            <div className="border h-[70vh] rounded-lg w-[30vw] py-[30px] flex flex-col justify-evenly items-center absolute top-[50%] left-[15vw] -translate-y-1/2">
+                <div className=" h-full w-full text-center flex flex-col items-center transition-all">
+                    <span className="text-4xl font-heavy bg-clip-text text-transparent bg-gradient-to-r from-[#ffe3b7]/[0.47] to-[#ffe3b7] select-none mb-[40px]">
+                        CANDIDATES
+                    </span>
+                    {candidateNames.map((name, index) => {
+                        return (
+                            <div
+                                key={index}
+                                className="flex w-[80%] items-center justify-around border rounded-lg px-2 py-3 mb-[20px]"
+                            >
+                                <span>
+                                    {index + 1}
+                                    {")"}
+                                    {name}
+                                </span>
+                                <button
+                                    className="border rounded-lg px-2 py-1 bg-gradient-to-r from-[#ffe3b7]/[0.47] to-[#ffe3b7] text-white"
+                                    onClick={() => {
+                                        if (elecStatus == 0) {
+                                            toast.error("Election has not started yet!");
+                                            return;
+                                        }
+                                        if (elecStatus == 2) {
+                                            toast.error("Election has ended!");
+                                            return;
+                                        }
+                                        setVerificationScreen(true);
+                                        setSelectedCand(candidateAddress[index]);
+                                    }}
+                                >
+                                    Vote
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
             {
-                verificationScreen && <>
-                    <div className="flex flex-col ml-10">
-                        <span>Verification Screen</span>
-                        <span>Enter your Proof</span>
-                        <span>You can get your voter proof from the get proof page</span>
-                        <input type="text" className="border" onChange={(e) => {
-                            setCommitement(e.target.value);
-                        }} />
-                        <input type="file" onChange={handleFileUpload} />
-                        <button onClick={handleVerifyProof} className="border">Verify</button>
-                    </div>
-
-                </>
+                verificationScreen && (
+                    <>
+                        <div className="absolute h-[100vh] w-[1000vw] bg-black bg-opacity-90"></div>
+                        <div className="absoulte left-[50vw] top-[50vh] z-10 ">
+                            <div className="flex flex-col ml-10 border justify-around h-[40vh] py-[40px] px-[20px] rounded-lg ">
+                                <span className="text-4xl font-heavy bg-clip-text text-transparent bg-gradient-to-r from-[#ffe3b7]/[0.47] to-[#ffe3b7] select-none mb-[40px]">
+                                    Verification Screen
+                                </span>
+                                <span className="text-l font-semibold text-left text-white">
+                                    Get your Voter Proof from the Get_Proof page
+                                </span>
+                                <input
+                                    type="text"
+                                    className="border-input
+                text-black
+                bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                                    placeholder="Enter your Proof"
+                                    onChange={(e) => {
+                                        setCommitement(e.target.value);
+                                    }}
+                                />
+                                <input type="file" onChange={handleFileUpload} />
+                                <button
+                                    onClick={handleVerifyProof}
+                                    className="ring-offset-background focus-visible:ring-ring flex h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-white px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+                                >
+                                    Verify
+                                </button>
+                            </div>
+                        </div>
+                    </>
+                )
             }
             {
-                verified && selectedCand != "" &&
-                <>
-                    <span>Confirmation</span>
-                    <span>Are you sure you want to vote for {selectedCand}</span>
-                    <button onClick={handleCastVote}>Proceed and vote</button>
-                </>
+                verified && selectedCand != "" && (
+                    <>
+                        <div className="absolute h-[100vh] w-[1000vw] bg-black bg-opacity-80"></div>
+                        <div className="border flex flex-col items-center z-10  py-[40px] px-[20px] rounded-lg ">
+                            <span className="text-4xl font-heavy bg-clip-text text-transparent bg-gradient-to-r from-[#ffe3b7]/[0.47] to-[#ffe3b7] select-none mb-[30px]">
+                                Confirmation
+                            </span>
+                            <span className="text-[20px] font-semibold text-left text-white">
+                                Are you sure you want to vote for{" "}
+                                <span className="text-[30px] text-stone-400">{selectedCand}</span>
+                                {" ?"}
+                            </span>
+                            <button
+                                className="ring-offset-background focus-visible:ring-ring flex h-10 w-full items-center justify-center whitespace-nowrap rounded-md bg-white px-4 py-2 text-sm font-bold text-black transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 mt-[10px]"
+                                onClick={handleCastVote}
+                            >
+                                Proceed and Vote
+                            </button>
+                        </div>
+                    </>
+                )
             }
-
-        </div>
-    </div>);
-}
+        </div >
+    );
+};
 
 export default ElectionPage;

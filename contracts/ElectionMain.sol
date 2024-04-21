@@ -11,8 +11,7 @@ contract ElectionMain {
         return sha256(concatenated);
     }
 
-    uint public endTime;
-    uint public startTime;
+    uint public status;
 
     // merkle trees contract
     address private merkleAddress;
@@ -21,15 +20,12 @@ contract ElectionMain {
 
     mapping(address => bool) admin;
 
-    constructor(address _merkleAddress, uint _duration, uint _startAfter) {
+    constructor(address _merkleAddress) {
         merkleAddress = _merkleAddress;
         merkleForest = MerkleTree(merkleAddress);
         treeID = merkleForest.initTreeAndGetID();
-
-        startTime = block.timestamp + _startAfter * 1 minutes;
-        endTime = startTime + _duration * 1 minutes;
-
         admin[msg.sender] = true;
+        status = 0;
     }
 
     // external nullfier
@@ -66,26 +62,17 @@ contract ElectionMain {
     }
 
     modifier beforeElection() {
-        require(
-            block.timestamp < startTime,
-            "Action cannot be done after the election begins"
-        );
+        require(status == 0, "Action cannot be done after the election begins");
         _;
     }
 
     modifier duringElection() {
-        require(
-            ((block.timestamp > startTime) && (block.timestamp < endTime)),
-            "Action can be done only during the election"
-        );
+        require(status == 1, "Action can be done only during the election");
         _;
     }
 
     modifier afterElection() {
-        require(
-            (block.timestamp > endTime),
-            "Action can be done only after the election"
-        );
+        require(status == 2, "Action can be done only after the election");
         _;
     }
 
@@ -203,12 +190,18 @@ contract ElectionMain {
     }
 
     // admin funcions
-    function startElection() public isAdmin {
-        startTime = block.timestamp;
+    function startElection(uint _num) public isAdmin returns (uint) {
+        status = _num;
+        return status;
     }
 
-    function endElection() public isAdmin {
-        endTime = block.timestamp;
+    function endElection(uint _num) public isAdmin returns (uint) {
+        status = _num;
+        return status;
+    }
+
+    function getElectionStatus() public view returns (uint) {
+        return status;
     }
 
     function checkIfAdmin() public view returns (bool) {
