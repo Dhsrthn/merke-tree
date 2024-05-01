@@ -14,12 +14,12 @@ private:
     string hashFunction(string s)
     {
         int hashValue = 0;
-        // for (int i = 0; i < s.size(); i++)
-        // {
-        //     hashValue += s[i];
-        // }
-        // hashValue = hashValue % 256;
-        // return to_string(hashValue);
+        for (int i = 0; i < s.size(); i++)
+        {
+            hashValue += s[i];
+        }
+        hashValue = hashValue % 256;
+        return to_string(hashValue);
         return s;
     }
     bool isPowerOfTwo(int n)
@@ -245,6 +245,58 @@ bool lookForElement(string array[], string data, int size)
 
 int main()
 {
+    cout << "----------------------------" << endl;
+    cout << "Merkle Tree Implementaion" << endl;
+    cout << "----------------------------" << endl;
+
+    cout << "Initialising the tree with three elements a,b,c" << endl;
+    vector<string> toAdd = {"a", "b", "c"};
+    MerkleTree tree(toAdd);
+    cout << "----------------------------" << endl;
+    cout << "The tree" << endl;
+    tree.printTree();
+    cout << "----------------------------" << endl;
+
+    cout << endl
+         << endl;
+
+    cout << "Adding three more elements d,e,f" << endl;
+    cout << "----------------------------" << endl;
+    tree.addElement("d");
+    cout << "The tree after  adding d" << endl;
+    tree.printTree();
+    cout << "----------------------------" << endl;
+    tree.addElement("e");
+    cout << "The tree after adding e" << endl;
+    tree.printTree();
+    cout << "----------------------------" << endl;
+    tree.addElement("f");
+    cout << "The tree after adding f" << endl;
+    tree.printTree();
+    cout << "----------------------------" << endl;
+    cout << endl
+         << endl;
+    cout << "Veryfing the membership of element d" << endl;
+    vector<string> pathV = tree.getPath("d");
+    cout << "Printing the path of element d" << endl;
+    for (auto it : pathV)
+    {
+        cout << it << endl;
+    }
+    cout << "Verifying the membership of d with the path" << endl;
+    cout << tree.verifyElement("d", pathV) << endl;
+    cout << "----------------------------" << endl;
+    cout << "Calling the verifying function with different element for d's path" << endl;
+    cout << tree.verifyElement("p", pathV) << endl;
+    cout << "----------------------------" << endl;
+
+    cout << endl
+         << endl
+         << endl;
+
+    cout << "----------------------------" << endl;
+    cout << "Time Complexity Comparision" << endl;
+    cout << "----------------------------" << endl;
     // to compare time taken
     clock_t start, end;
     double cpu_time_used;
@@ -260,7 +312,7 @@ int main()
     MerkleTree merkle(toAddElements);
     end = clock();
     // merkle.printTree();
-    printf("Time taken by the function: %ld cycles\n", end - start);
+    printf("Time taken by the function to insert %d elements in a Merkle Tree: %ld cycles\n", N, end - start);
 
     start = clock();
     for (int i = 0; i < toAddElements.size(); i++)
@@ -268,7 +320,7 @@ int main()
         addElement(array, toAddElements[i], p);
     }
     end = clock();
-    printf("Time taken by the function: %ld cycles\n", end - start);
+    printf("Time taken by the function to insert %d elements in a Array: %ld cycles\n", N, end - start);
 
     // index of element to verify
     vector<int> toVerify = {11000, 12000, 13000, 14000, 15000, 1600, 17000, 18000, 19000, 20000};
@@ -293,7 +345,7 @@ int main()
 
     int oneMerkleElement = sizeof(merkle.tree[0][0]);
     int oneArrayElement = sizeof(array[0]);
-    cout << "Array storage" << oneArrayElement * N << endl;
+    cout << "Array storage " << oneArrayElement * N << endl;
     int total = 0;
     for (int i = 0; i < merkle.tree.size(); i++)
     {

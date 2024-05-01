@@ -1,0 +1,32 @@
+Tree after inerting
+abcdefgh 
+abcd efgh 
+ab cd ef gh 
+a b c d e f g h 
+
+
+Querying elements
+Tree after querying a
+abcdefgh 
+abcd efgh 
+ab cd ef gh 
+a _del_ c d e f g h 
+
+Tree after querying b
+abcdefgh 
+abcd efgh 
+ab _del_ ef gh 
+_del_ _del_ c d e f g h 
+
+Tree after querying d
+abcdefgh 
+abcd efgh 
+ab _del_ ef gh 
+_del_ _del_ _del_ d e f g h 
+
+Tree after querying e
+abcdefgh 
+abcd efgh 
+ab _del_ ef gh 
+_del_ _del_ _del_ d e _del_ g h 
+

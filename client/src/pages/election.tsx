@@ -29,6 +29,7 @@ const ElectionPage = () => {
     ]);
     const [candidateAddress, setCandidateAddress] = useState<string[]>([]);
     const [selectedCand, setSelectedCand] = useState<string>("Kavin");
+    const [selIdx, setSelIdx] = useState<number>(-1);
     const [commitment, setCommitement] = useState<string>("");
 
     const [path, setPath] = useState<string[]>([]);
@@ -363,6 +364,7 @@ const ElectionPage = () => {
                                         }
                                         setVerificationScreen(true);
                                         setSelectedCand(candidateAddress[index]);
+                                        setSelIdx(index)
                                     }}
                                 >
                                     Vote
@@ -389,7 +391,7 @@ const ElectionPage = () => {
                                     className="border-input
                 text-black
                 bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                    placeholder="Enter your Proof"
+                                    placeholder="Enter your Commitment"
                                     onChange={(e) => {
                                         setCommitement(e.target.value);
                                     }}
@@ -416,7 +418,7 @@ const ElectionPage = () => {
                             </span>
                             <span className="text-[20px] font-semibold text-left text-white">
                                 Are you sure you want to vote for{" "}
-                                <span className="text-[30px] text-stone-400">{selectedCand}</span>
+                                <span className="text-[20px] text-stone-400">{candidateNames[selIdx]}</span>
                                 {" ?"}
                             </span>
                             <button

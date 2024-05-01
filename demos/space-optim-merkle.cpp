@@ -126,7 +126,6 @@ public:
     vector<map<int, string>> tree;
     SpaceOptimizedMerkleTree(vector<string> &data)
     {
-        cout << "hai" << endl;
         nodes = data;
         int n = nodes.size();
         int nextPox = nextPowerOfTwo(n);
@@ -137,9 +136,7 @@ public:
                 nodes.push_back(PADDING);
             }
             firstPadding = n;
-            cout << "hai" << endl;
         }
-        cout << "hai" << endl;
         n = nodes.size();
         map<int, string> temp;
         for (int i = 0; i < n; i++)
@@ -272,14 +269,27 @@ int main()
 {
     vector<string> data = {"a", "b", "c", "d", "e", "f", "g", "h"};
     SpaceOptimizedMerkleTree tree(data);
+    cout << "Tree after inerting" << endl;
     tree.printTree();
+    cout << endl;
+    cout << endl;
     tree.setStaticTree(true);
+    cout << "Querying elements" << endl;
+    cout << "Tree after querying a" << endl;
     tree.getPath("a");
-    tree.getPath("b");
-    tree.getPath("c");
-    tree.getPath("d");
-    tree.getPath("e");
-    tree.getPath("f");
     tree.printTree();
+    cout << endl;
+    cout << "Tree after querying b" << endl;
+    tree.getPath("b");
+    tree.printTree();
+    cout << endl;
+    cout << "Tree after querying d" << endl;
+    tree.getPath("d");
+    tree.printTree();
+    cout << endl;
+    cout << "Tree after querying e" << endl;
+    tree.getPath("e");
+    tree.printTree();
+    cout << endl;
     return 1;
 }

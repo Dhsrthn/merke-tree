@@ -128,7 +128,7 @@ export async function castVote(path, hashDirection, commitment, candidate) {
   try {
     await electionContract.methods
       .castVote(path, hashDirection, commitment, candidate)
-      .send({from:account});
+      .send({ from: account });
     return true;
   } catch (error) {
     console.error("Error casting vote", error);
@@ -196,10 +196,8 @@ export async function checkAdmin() {
 
 export async function startTheElection() {
   try {
-    const res = await electionContract.methods
-      .startElection(1)
-      .send({ from: account });
-    console.log("Election started", res);
+    await electionContract.methods.startElection(1).send({ from: account });
+    return true;
   } catch (err) {
     console.error("Error starting the election", err);
     return null;
@@ -208,10 +206,8 @@ export async function startTheElection() {
 
 export async function endTheEletion() {
   try {
-    const res = await electionContract.methods
-      .endElection(2)
-      .send({ from: account });
-    console.log("Election ended", res);
+    await electionContract.methods.endElection(2).send({ from: account });
+    return true;
   } catch (err) {
     console.error("Error ending the election", err);
     return null;

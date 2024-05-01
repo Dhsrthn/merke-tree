@@ -1,0 +1,74 @@
+----------------------------
+Merkle Tree Implementaion
+----------------------------
+Initialising the tree with three elements a,b,c
+----------------------------
+The tree
+48 
+225 223 
+97 98 99 58 
+----------------------------
+
+
+Adding three more elements d,e,f
+----------------------------
+The tree after  adding d
+204 
+225 3 
+97 98 99 100 
+----------------------------
+The tree after adding e
+0 
+204 55 
+225 3 255 218 
+97 98 99 100 101 58 58 58 
+----------------------------
+The tree after adding g
+203 
+204 5 
+225 3 37 218 
+97 98 99 100 101 102 58 58 
+----------------------------
+
+
+Veryfing the membership of element d
+Printing the path of element d
+99
+225
+5
+Verifying the membership of d with the path
+1
+----------------------------
+Calling the verifying function with different element for d's path
+0
+----------------------------
+
+
+
+----------------------------
+Time Complexity Comparision
+----------------------------
+Time taken by the function to insert 20001 elements in a Merkle Tree: 23062 cycles
+Time taken by the function to insert 20001 elements in a Array: 309 cycles
+Merkle Time taken by the function: 3 cycles
+Merkle Time taken by the function: 2 cycles
+Merkle Time taken by the function: 2 cycles
+Merkle Time taken by the function: 3 cycles
+Merkle Time taken by the function: 2 cycles
+Merkle Time taken by the function: 3 cycles
+Merkle Time taken by the function: 3 cycles
+Merkle Time taken by the function: 3 cycles
+Merkle Time taken by the function: 2 cycles
+Merkle Time taken by the function: 2 cycles
+ArrayTime taken by the function: 74 cycles
+ArrayTime taken by the function: 60 cycles
+ArrayTime taken by the function: 63 cycles
+ArrayTime taken by the function: 72 cycles
+ArrayTime taken by the function: 82 cycles
+ArrayTime taken by the function: 9 cycles
+ArrayTime taken by the function: 101 cycles
+ArrayTime taken by the function: 110 cycles
+ArrayTime taken by the function: 120 cycles
+ArrayTime taken by the function: 130 cycles
+Array storage640032
+Merkle tree storage 2097120

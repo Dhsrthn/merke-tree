@@ -1,5 +1,5 @@
 {
-  "ElectionModule#HashContract": "0x770683deC60A15d628f61c869EcDDb3f7581969c",
-  "MerkleTree#MerkleTree": "0xD4280a38459539205B2fB1e00ae08B703c199131",
-  "ElectionModule#ElectionMain": "0x3e1DB0B37F6f1fC488d41E21bD1bdB39d6f5e3C4"
+  "ElectionModule#HashContract": "0x5076f3ecEfc20057B34f9A04c43e3D130D7336eb",
+  "MerkleTree#MerkleTree": "0x659b13Ed16db715AaFdFe45d7BCBf0e1DD0E339e",
+  "ElectionModule#ElectionMain": "0x26B238569483dE13D9d8b2c895F52cE18bF07262"
 }
